@@ -4,6 +4,11 @@ from pathlib import Path
 
 import pymupdf
 from langchain_core.documents import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+
+DEFAULT_CHUNK_SIZE = 500
+DEFAULT_CHUNK_OVERLAP = 50
 
 
 class DocumentLoadError(Exception):
@@ -30,6 +35,26 @@ def load_pdf_documents(documents_directory: str | Path = "datos") -> list[Docume
         raise DocumentLoadError("Los PDF encontrados no contienen texto extraíble.")
 
     return documents
+
+
+def split_documents(
+    documents: list[Document],
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
+    chunk_overlap: int = DEFAULT_CHUNK_OVERLAP,
+) -> list[Document]:
+    """Fragmenta documentos y conserva sus metadatos."""
+    if not documents:
+        raise ValueError("Se requiere al menos un documento para fragmentar.")
+    if chunk_size <= 0:
+        raise ValueError("El tamaño de fragmento debe ser mayor que cero.")
+    if not 0 <= chunk_overlap < chunk_size:
+        raise ValueError("El solapamiento debe ser menor que el tamaño de fragmento.")
+
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+    )
+    return splitter.split_documents(documents)
 
 
 def _validate_documents_directory(directory: Path) -> None:
