@@ -116,9 +116,10 @@ def generate_answer(
     query: str,
     vector_store: VectorStore,
     llm: BaseChatModel,
+    chat_history: list[tuple[str, str]] | None = None,
     k: int = 4,
 ) -> str:
-    """Busca contexto relevante en la base vectorial y genera una respuesta informada mediante el LLM."""
+    """Busca contexto relevante y genera una respuesta considerando el historial de chat."""
     docs = search_documents(query, vector_store, k=k)
 
     if not docs:
@@ -131,19 +132,27 @@ def generate_answer(
         ]
     )
 
-    prompt_template = ChatPromptTemplate.from_messages(
-        [
-            (
-                "system",
-                "Eres un asistente de IA corporativo experto en responder preguntas basadas exclusivamente "
-                "en la documentación interna de la empresa. Responde de forma clara, directa y estructurada.\n"
-                "Si la respuesta no se encuentra explícitamente en el contexto proporcionado, responde amablemente "
-                "que no cuentas con suficiente información en los documentos.\n\n"
-                "CONTEXTO DISPONIBLE:\n{context}",
-            ),
-            ("human", "{question}"),
-        ]
-    )
+    # 1. Definimos el mensaje inicial del sistema
+    messages = [
+        (
+            "system",
+            "Eres un asistente de IA corporativo experto en responder preguntas basadas exclusivamente "
+            "en la documentación interna de la empresa. Responde de forma clara, directa y estructurada.\n"
+            "Si la respuesta no se encuentra explícitamente en el contexto proporcionado, responde amablemente "
+            "que no cuentas con suficiente información en los documentos.\n\n"
+            "CONTEXTO DISPONIBLE:\n{context}",
+        )
+    ]
+
+    # 2. Añadimos el historial de conversación previo si existe
+    if chat_history:
+        for role, content in chat_history:
+            messages.append((role, content))
+
+    # 3. Añadimos la pregunta actual del usuario
+    messages.append(("human", "{question}"))
+
+    prompt_template = ChatPromptTemplate.from_messages(messages)
 
     chain = prompt_template | llm
     response = chain.invoke({"context": context_text, "question": query})
