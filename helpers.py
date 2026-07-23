@@ -6,6 +6,8 @@ import pymupdf
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
+from langchain_core.embeddings import Embeddings#
+from langchain_core.vectorstores import InMemoryVectorStore#
 
 DEFAULT_CHUNK_SIZE = 500
 DEFAULT_CHUNK_OVERLAP = 50
@@ -84,3 +86,16 @@ def _load_pdf_pages(pdf_path: Path) -> list[Document]:
         raise DocumentLoadError(
             f"No fue posible leer el PDF '{pdf_path.name}'."
         ) from error
+
+
+def create_vector_index(documents: list[Document], embeddings_model: Embeddings) -> InMemoryVectorStore:
+    """Crea un índice vectorial en memoria a partir de los fragmentos y el modelo de embeddings."""
+    if not documents:
+        raise ValueError("La lista de fragmentos de documentos está vacía.")
+    if not embeddings_model:
+        raise ValueError("Se requiere un modelo de embeddings válido.")
+
+    return InMemoryVectorStore.from_documents(
+        documents=documents,
+        embedding=embeddings_model,
+    )
