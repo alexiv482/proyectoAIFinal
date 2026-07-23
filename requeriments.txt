@@ -19,3 +19,4 @@ python-dotenv==1.2.2
 langchain-cohere==0.6.0
 # Cliente API de Cohere
 cohere==5.21.1
+numpy==2.3.2

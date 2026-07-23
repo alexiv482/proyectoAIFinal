@@ -7,3 +7,5 @@ ROADMAP.md
 .agents/
 
 .vscode/
+
+__pycache__

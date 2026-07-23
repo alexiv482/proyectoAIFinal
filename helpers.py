@@ -7,7 +7,7 @@ from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from langchain_core.embeddings import Embeddings#
-from langchain_core.vectorstores import InMemoryVectorStore#
+from langchain_core.vectorstores import InMemoryVectorStore, VectorStore#
 
 DEFAULT_CHUNK_SIZE = 500
 DEFAULT_CHUNK_OVERLAP = 50
@@ -99,3 +99,13 @@ def create_vector_index(documents: list[Document], embeddings_model: Embeddings)
         documents=documents,
         embedding=embeddings_model,
     )
+
+def search_documents(query: str, vector_store: VectorStore, k: int = 4) -> list[Document]:
+    """Realiza una búsqueda de similitud en el índice vectorial devolviendo los k fragmentos más relevantes."""
+    if not query.strip():
+        raise ValueError("La consulta de búsqueda no puede estar vacía.")
+    if not vector_store:
+        raise ValueError("Se requiere un índice vectorial válido para buscar.")
+        
+    # similarity_search devuelve los documentos más cercanos al query en el espacio vectorial
+    return vector_store.similarity_search(query, k=k)
