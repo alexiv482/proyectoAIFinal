@@ -6,8 +6,10 @@ import pymupdf
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from langchain_core.embeddings import Embeddings#
-from langchain_core.vectorstores import InMemoryVectorStore, VectorStore#
+from langchain_core.embeddings import Embeddings
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.vectorstores import InMemoryVectorStore, VectorStore
 
 DEFAULT_CHUNK_SIZE = 500
 DEFAULT_CHUNK_OVERLAP = 50
@@ -109,3 +111,41 @@ def search_documents(query: str, vector_store: VectorStore, k: int = 4) -> list[
         
     # similarity_search devuelve los documentos más cercanos al query en el espacio vectorial
     return vector_store.similarity_search(query, k=k)
+
+def generate_answer(
+    query: str,
+    vector_store: VectorStore,
+    llm: BaseChatModel,
+    k: int = 4,
+) -> str:
+    """Busca contexto relevante en la base vectorial y genera una respuesta informada mediante el LLM."""
+    docs = search_documents(query, vector_store, k=k)
+
+    if not docs:
+        return "No se encontró información relevante en los documentos para responder a esta pregunta."
+
+    context_text = "\n\n---\n\n".join(
+        [
+            f"Fuente: {doc.metadata.get('source', 'Desconocido')} (Pág. {doc.metadata.get('page', '?')})\n{doc.page_content}"
+            for doc in docs
+        ]
+    )
+
+    prompt_template = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                "Eres un asistente de IA corporativo experto en responder preguntas basadas exclusivamente "
+                "en la documentación interna de la empresa. Responde de forma clara, directa y estructurada.\n"
+                "Si la respuesta no se encuentra explícitamente en el contexto proporcionado, responde amablemente "
+                "que no cuentas con suficiente información en los documentos.\n\n"
+                "CONTEXTO DISPONIBLE:\n{context}",
+            ),
+            ("human", "{question}"),
+        ]
+    )
+
+    chain = prompt_template | llm
+    response = chain.invoke({"context": context_text, "question": query})
+
+    return str(response.content)
