@@ -18,7 +18,7 @@ El sistema utiliza un enfoque RAG (Retrieval-Augmented Generation) que consta de
 * **Embeddings:** Cohere (`embed-v4.0`)
 * **Modelo de Lenguaje (LLM):** Groq (`llama-3.3-70b-versatile`)
 * **Procesamiento de PDF:** PyMuPDF
-* **Despliegue:** Oracle Cloud Infrastructure (OCI)
+* **Despliegue:** Streamlit
 
 ## 🚀 Instrucciones para Ejecutar el Proyecto (Local)
 

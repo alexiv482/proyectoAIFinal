@@ -18,7 +18,6 @@ DEFAULT_CHUNK_OVERLAP = 50
 class DocumentLoadError(Exception):
     """Indica que no fue posible cargar los documentos fuente."""
 
-
 def load_pdf_documents(documents_directory: str | Path = "datos") -> list[Document]:
     """Carga todos los PDF de un directorio como documentos de LangChain."""
     directory = Path(documents_directory)
@@ -132,7 +131,7 @@ def generate_answer(
         ]
     )
 
-    # 1. Definimos el mensaje inicial del sistema
+    # 1. prompt inicial del sistema
     messages = [
         (
             "system",
@@ -144,12 +143,12 @@ def generate_answer(
         )
     ]
 
-    # 2. Añadimos el historial de conversación previo si existe
+    # 2. Añade el historial de conversación previo si existe
     if chat_history:
         for role, content in chat_history:
             messages.append((role, content))
 
-    # 3. Añadimos la pregunta actual del usuario
+    # 3. Añade la pregunta actual del usuario
     messages.append(("human", "{question}"))
 
     prompt_template = ChatPromptTemplate.from_messages(messages)

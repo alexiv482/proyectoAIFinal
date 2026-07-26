@@ -1,11 +1,11 @@
 .env
 
-AGENTS.md
-
 ROADMAP.md
-
-.agents/
 
 .vscode/
 
 __pycache__
+
+cero/
+
+.venv-ai/

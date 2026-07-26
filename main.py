@@ -10,7 +10,6 @@ from helpers import (
 )
 from models import create_embeddings, create_llm
 
-
 @st.cache_resource(show_spinner=False)
 def initialize_system():
     """Inicializa los componentes del sistema RAG y los mantiene en caché."""
@@ -27,7 +26,7 @@ def main() -> None:
     st.set_page_config(page_title="Agente Mercado Central", page_icon="🛒")
     st.title("🛒 Asistente Mercado Central 24h")
 
-    # Inicializar el historial en la sesión de Streamlit si no existe
+    # Inicializa el historial en la sesión de Streamlit si no existe
     if "messages" not in st.session_state:
         st.session_state.messages = [
             {
@@ -44,25 +43,25 @@ def main() -> None:
             st.error(f"Ocurrió un error al cargar el sistema: {error}")
             st.stop()
 
-    # Renderizar los mensajes guardados en el historial
+    # Renderiza los mensajes guardados en el historial
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
     # Entrada de texto usando el componente de chat de Streamlit
     if prompt := st.chat_input("Ingresa tu consulta:"):
-        # 1. Guardar y mostrar el mensaje del usuario
+        # 1. Guarda y muestra el mensaje del usuario
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # 2. Formatear el historial para LangChain (omitiendo el saludo inicial)
+        # 2. Formatea el historial para LangChain (omitiendo el saludo inicial)
         chat_history = []
         for msg in st.session_state.messages[1:-1]:
             role_langchain = "human" if msg["role"] == "user" else "ai"
             chat_history.append((role_langchain, msg["content"]))
 
-        # 3. Generar y mostrar la respuesta de la IA
+        # 3. Genera y muestra la respuesta de la IA
         with st.chat_message("assistant"):
             with st.spinner("Analizando documentos corporativos..."):
                 try:
@@ -73,7 +72,7 @@ def main() -> None:
                         chat_history=chat_history
                     )
                     st.markdown(respuesta)
-                    # 4. Guardar la respuesta de la IA en el historial
+                    # 4. Guarda la respuesta de la IA en el historial
                     st.session_state.messages.append({"role": "assistant", "content": respuesta})
                 except Exception as error:
                     st.error(f"Error al generar la respuesta: {error}")
