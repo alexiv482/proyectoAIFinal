@@ -23,16 +23,17 @@ def initialize_system():
     return vector_store, llm
 
 @st.dialog("👁️ Visor de Documentos", width="large")
-def mostrar_pdf(file_path):
-    """Abre una ventana emergente para visualizar el PDF y da la opción de descarga."""
+def mostrar_pdf(file_path, page=1):
+    """Abre una ventana emergente para visualizar el PDF en la página específica y da la opción de descarga."""
     with open(file_path, "rb") as f:
         base64_pdf = base64.b64encode(f.read()).decode('utf-8')
     
-    # Incrusta el PDF en un iframe HTML
-    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
-    st.markdown(pdf_display, unsafe_allow_html=True)
+    # <object> para mejor compatibilidad en despliegue
+    pdf_html = f'<object data="data:application/pdf;base64,{base64_pdf}#page={page}" type="application/pdf" width="100%" height="600px"></object>'
     
-    # Botón de descarga opcional
+    # Renderiza a través del componente HTML seguro de Streamlit en lugar de st.markdown
+    st.components.v1.html(pdf_html, height=610)
+    
     with open(file_path, "rb") as f:
         st.download_button(
             label="📥 Descargar este documento",
@@ -217,8 +218,8 @@ def main() -> None:
         with st.chat_message("assistant", avatar=URL_AVATAR_BOT):
             with st.spinner("Buscando en los documentos de la compañía..."):
                 try:
-                    # AHORA RECIBIMOS EL TEXTO Y LOS DOCUMENTOS
-                    respuesta_texto, docs = generate_answer(
+                    # AHORA RECIBE EL TEXTO Y LOS DOCUMENTOS
+                    respuesta_texto, docs, *_ = generate_answer(
                         query=prompt,
                         vector_store=vector_store,
                         llm=llm,
@@ -241,7 +242,7 @@ def main() -> None:
                                 # Mostramos el archivo
                                 respuesta_final += f"- 📄 **{doc_name}** (Pág. {doc_page})\n"
 
-                    # Mostramos la respuesta con las citas integradas
+                    # Muestra la respuesta con las citas integradas
                     st.markdown(respuesta_final)
                     
                     # 4. Guarda la respuesta completa en el historial
