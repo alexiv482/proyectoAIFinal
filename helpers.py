@@ -14,7 +14,6 @@ from langchain_core.vectorstores import InMemoryVectorStore, VectorStore
 DEFAULT_CHUNK_SIZE = 500
 DEFAULT_CHUNK_OVERLAP = 50
 
-
 class DocumentLoadError(Exception):
     """Indica que no fue posible cargar los documentos fuente."""
 
@@ -38,7 +37,6 @@ def load_pdf_documents(documents_directory: str | Path = "datos") -> list[Docume
         raise DocumentLoadError("Los PDF encontrados no contienen texto extraíble.")
 
     return documents
-
 
 def split_documents(
     documents: list[Document],
@@ -117,12 +115,13 @@ def generate_answer(
     llm: BaseChatModel,
     chat_history: list[tuple[str, str]] | None = None,
     k: int = 4,
-) -> str:
+) -> tuple[str, list]:
     """Busca contexto relevante y genera una respuesta considerando el historial de chat."""
     docs = search_documents(query, vector_store, k=k)
 
     if not docs:
-        return "No se encontró información relevante en los documentos para responder a esta pregunta."
+        # Retorna el mensaje y una lista vacía de documentos
+        return "No se encontró información relevante en los documentos para responder a esta pregunta.", [] 
 
     context_text = "\n\n---\n\n".join(
         [
@@ -131,7 +130,6 @@ def generate_answer(
         ]
     )
 
-    # 1. prompt inicial del sistema
     messages = [
         (
             "system",
@@ -143,17 +141,15 @@ def generate_answer(
         )
     ]
 
-    # 2. Añade el historial de conversación previo si existe
     if chat_history:
         for role, content in chat_history:
             messages.append((role, content))
 
-    # 3. Añade la pregunta actual del usuario
     messages.append(("human", "{question}"))
 
     prompt_template = ChatPromptTemplate.from_messages(messages)
-
     chain = prompt_template | llm
     response = chain.invoke({"context": context_text, "question": query})
 
-    return str(response.content)
+    # Retorna el texto de la IA y los metadatos de los documentos recuperados
+    return str(response.content), docs
