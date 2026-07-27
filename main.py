@@ -124,8 +124,19 @@ def main() -> None:
                 pdf_files = sorted([f for f in os.listdir("static") if f.endswith(".pdf")])
                 if pdf_files:
                     for file in pdf_files:
-                        url_pdf = f"/app/static/{file}"
-                        st.link_button(f"📄 {file}", url=url_pdf, use_container_width=True)
+                        file_path = os.path.join("static", file)
+                        try:
+                            with open(file_path, "rb") as pdf_file:
+                                st.download_button(
+                                    label=f"📄 {file}",
+                                    data=pdf_file,
+                                    file_name=file,
+                                    mime="application/pdf",
+                                    key=f"dl_{file}",
+                                    use_container_width=True
+                                )
+                        except Exception as err:
+                            st.caption(f"⚠️ Error al leer {file}: {err}")
                 else:
                     st.caption("No hay archivos PDF disponibles.")
             else:
@@ -213,15 +224,15 @@ def main() -> None:
                         respuesta_final += "\n\n---\n**📚 Fuentes consultadas:**\n"
                         fuentes_vistas = set()
                         for doc in docs:
-                            doc_name = doc.metadata.get('source', 'Desconocido')
+                            # Extrae solo el nombre del archivo sin rutas
+                            doc_name = os.path.basename(doc.metadata.get('source', 'Desconocido'))
                             doc_page = doc.metadata.get('page', '?')
                             clave_unica = f"{doc_name}_{doc_page}"
                             
                             if clave_unica not in fuentes_vistas:
                                 fuentes_vistas.add(clave_unica)
-                                # Mostramos el archivo
-                                url_fuente = f"/app/static/{doc_name}#page={doc_page}"
-                                respuesta_final += f"- [📄 **{doc_name}** (Pág. {doc_page})]({url_fuente})\n"
+
+                                respuesta_final += f"- 📄 **{doc_name}** (Pág. {doc_page})\n"
 
                     # Muestra la respuesta con las citas integradas
                     st.markdown(respuesta_final)
