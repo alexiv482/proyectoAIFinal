@@ -70,7 +70,7 @@ El proyecto se encuentra desplegado de manera pública utilizando Streamlit Comm
 🔗 Enlace de la aplicación en vivo: https://agentemercadocentral24h.streamlit.app/
 
 **Interfaz Inicial:**
-![Pantalla Inicial](normal.JPG)
+![Pantalla Inicial](imgs/normal.JPG)
 
 **Captura de pantalla del funcionamiento en producción:**
-![Descarga & Fuentes](descarga.JPG)
+![Descarga & Fuentes](imgs/descarga.JPG)
