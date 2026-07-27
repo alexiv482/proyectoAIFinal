@@ -17,7 +17,7 @@ DEFAULT_CHUNK_OVERLAP = 50
 class DocumentLoadError(Exception):
     """Indica que no fue posible cargar los documentos fuente."""
 
-def load_pdf_documents(documents_directory: str | Path = "datos") -> list[Document]:
+def load_pdf_documents(documents_directory: str | Path = "static") -> list[Document]:
     """Carga todos los PDF de un directorio como documentos de LangChain."""
     directory = Path(documents_directory)
     _validate_documents_directory(directory)

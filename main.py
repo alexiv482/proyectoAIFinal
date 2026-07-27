@@ -1,7 +1,7 @@
 """Punto de entrada principal y de interfaz de usuario para el agente."""
 
 import os
-import base64
+import shutil
 import streamlit as st
 
 from helpers import (
@@ -15,32 +15,12 @@ from models import create_embeddings, create_llm
 @st.cache_resource(show_spinner=False)
 def initialize_system():
     """Inicializa los componentes del sistema RAG y los mantiene en caché."""
-    docs = load_pdf_documents("datos")
+    docs = load_pdf_documents("static")
     chunks = split_documents(docs)
     embeddings = create_embeddings()
     vector_store = create_vector_index(chunks, embeddings)
     llm = create_llm()
     return vector_store, llm
-
-@st.dialog("👁️ Visor de Documentos", width="large")
-def mostrar_pdf(file_path, page=1):
-    """Abre una ventana emergente para visualizar el PDF en la página específica y da la opción de descarga."""
-    with open(file_path, "rb") as f:
-        base64_pdf = base64.b64encode(f.read()).decode('utf-8')
-    
-    # <object> para mejor compatibilidad en despliegue
-    pdf_html = f'<object data="data:application/pdf;base64,{base64_pdf}#page={page}" type="application/pdf" width="100%" height="600px"></object>'
-    
-    # Renderiza a través del componente HTML seguro de Streamlit en lugar de st.markdown
-    st.components.v1.html(pdf_html, height=610)
-    
-    with open(file_path, "rb") as f:
-        st.download_button(
-            label="📥 Descargar este documento",
-            data=f,
-            file_name=os.path.basename(file_path),
-            mime="application/pdf"
-        )
 
 def main() -> None:
     """Interfaz de usuario construida con Streamlit y soporte para historial."""
@@ -140,16 +120,16 @@ def main() -> None:
 
         # DESPLEGABLE DE DOCUMENTOS
         with st.expander("📁 Documentos Oficiales", expanded=False):
-            if os.path.exists("datos"):
-                pdf_files = sorted([f for f in os.listdir("datos") if f.endswith(".pdf")])
+            if os.path.exists("static"):
+                pdf_files = sorted([f for f in os.listdir("static") if f.endswith(".pdf")])
                 if pdf_files:
                     for file in pdf_files:
-                        if st.button(f"📄 {file}", key=f"btn_{file}", use_container_width=True):
-                            mostrar_pdf(os.path.join("datos", file))
+                        url_pdf = f"/app/static/{file}"
+                        st.link_button(f"📄 {file}", url=url_pdf, use_container_width=True)
                 else:
                     st.caption("No hay archivos PDF disponibles.")
             else:
-                st.warning("Carpeta 'datos' no encontrada.")
+                st.warning("Carpeta 'static' no encontrada.")
 
         # CONTENEDOR INFERIOR FIJO
         st.markdown(
@@ -240,7 +220,8 @@ def main() -> None:
                             if clave_unica not in fuentes_vistas:
                                 fuentes_vistas.add(clave_unica)
                                 # Mostramos el archivo
-                                respuesta_final += f"- 📄 **{doc_name}** (Pág. {doc_page})\n"
+                                url_fuente = f"/app/static/{doc_name}#page={doc_page}"
+                                respuesta_final += f"- [📄 **{doc_name}** (Pág. {doc_page})]({url_fuente})\n"
 
                     # Muestra la respuesta con las citas integradas
                     st.markdown(respuesta_final)
